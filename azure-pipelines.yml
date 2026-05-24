@@ -19,3 +19,19 @@ steps:
 - script: |
     pytest --cov=app --cov-report=xml
   displayName: 'Run Tests with Coverage'
+
+- task: SonarCloudPrepare@4
+  inputs:
+    SonarQube: 'sonarcloud'
+    organization: 'konasatish4444'
+    scannerMode: 'cli'
+    configMode: 'manual'
+    cliProjectKey: 'konasatish4444_python-sonar-demo'
+    cliSources: '.'
+    extraProperties: 'sonar.python.coverage.reportPaths=coverage.xml'
+
+- task: SonarCloudAnalyze@3
+
+- task: SonarCloudPublish@3
+  inputs:
+    pollingTimeoutSec: '300'
