@@ -35,7 +35,7 @@ steps:
 
 # Generate Vulnerability Report
 - script: |
-    grype sbom:sbom.xml -o json > grype-report.json
+    grype sbom:sbom.xml -o table > grype-report.txt
   displayName: 'Generate Grype Report'
 
 - task: PublishBuildArtifacts@1
@@ -57,7 +57,7 @@ steps:
 
 # Fail Pipeline on HIGH/CRITICAL
 - script: |
-    grype sbom:sbom.xml --fail-on high
+    grype sbom:sbom.xml --fail-on medium
   displayName: 'Fail Pipeline on High Vulnerabilities'
 
 - task: SonarCloudPrepare@4
