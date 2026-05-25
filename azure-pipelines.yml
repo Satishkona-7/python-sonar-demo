@@ -28,6 +28,38 @@ steps:
    cyclonedx-py requirements requirements.txt -o sbom.xml
   displayName: 'Generate sbom'
 
+# Install Grype
+- script: |
+    curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+  displayName: 'Install Grype'
+
+# Generate Vulnerability Report
+- script: |
+    grype sbom:sbom.xml -o json > grype-report.json
+  displayName: 'Generate Grype Report'
+
+- task: PublishBuildArtifacts@1
+  condition: always()
+  inputs:
+    PathtoPublish: 'sbom.xml'
+    ArtifactName: 'SBOM-Report'
+    publishLocation: 'Container'
+  displayName: 'Publish SBOM Artifact'
+
+- task: PublishBuildArtifacts@1
+  condition: always()
+  inputs:
+    PathtoPublish: 'grype-report.json'
+    ArtifactName: 'Grype-Report'
+    publishLocation: 'Container'
+  displayName: 'Publish Grype Report'
+
+
+# Fail Pipeline on HIGH/CRITICAL
+- script: |
+    grype sbom:sbom.xml --fail-on high
+  displayName: 'Fail Pipeline on High Vulnerabilities'
+
 - task: SonarCloudPrepare@4
   inputs:
     SonarQube: 'sonarcloud'
@@ -43,10 +75,3 @@ steps:
 - task: SonarCloudPublish@4
   inputs:
     pollingTimeoutSec: '300'
-
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: 'sbom.xml'
-    ArtifactName: 'SBOM-Report'
-    publishLocation: 'Container'
-  displayName: 'Publish SBOM Artifact'
