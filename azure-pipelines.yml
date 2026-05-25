@@ -17,8 +17,16 @@ steps:
   displayName: 'Install Dependencies'
 
 - script: |
+   pip install cyclonedx-bom
+  displayName: 'Install Cyclonedx'
+
+- script: |
     pytest --cov=app --cov-report=xml
   displayName: 'Run Tests with Coverage'
+
+- script: |
+   cyclonedx-py requirements requirements.txt -o sbom.xml
+  displayName: 'Generate sbom'
 
 - task: SonarCloudPrepare@4
   inputs:
@@ -35,3 +43,10 @@ steps:
 - task: SonarCloudPublish@4
   inputs:
     pollingTimeoutSec: '300'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: 'sbom.xml'
+    ArtifactName: 'SBOM-Report'
+    publishLocation: 'Container'
+  displayName: 'Publish SBOM Artifact'
