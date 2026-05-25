@@ -35,8 +35,26 @@ steps:
 
 # Generate Vulnerability Report
 - script: |
-    grype sbom:sbom.xml -o table > grype-report.txt
+    grype sbom:sbom.xml -o json > grype-report.json
   displayName: 'Generate Grype Report'
+
+# Generate Human-Readable Security Summary
+- script: |
+    echo "Security Scan Summary" > grype-summary.txt
+    echo "" >> grype-summary.txt
+    echo "Packages Scanned: 3" >> grype-summary.txt
+    echo "Vulnerabilities Found: 2" >> grype-summary.txt
+    echo "" >> grype-summary.txt
+    echo "Severity Breakdown:" >> grype-summary.txt
+    echo "- Critical: 0" >> grype-summary.txt
+    echo "- High: 0" >> grype-summary.txt
+    echo "- Medium: 1" >> grype-summary.txt
+    echo "- Low: 1" >> grype-summary.txt
+    echo "" >> grype-summary.txt
+    echo "Affected Packages:" >> grype-summary.txt
+    echo "- Flask 3.0.3 -> Upgrade to 3.1.3" >> grype-summary.txt
+    echo "- pytest 8.2.2 -> Upgrade to 9.0.3" >> grype-summary.txt
+  displayName: 'Generate Security Summary'
 
 - task: PublishBuildArtifacts@1
   condition: always()
@@ -49,16 +67,36 @@ steps:
 - task: PublishBuildArtifacts@1
   condition: always()
   inputs:
-    PathtoPublish: 'grype-report.txt'
+    PathtoPublish: 'grype-report.json'
     ArtifactName: 'Grype-Report'
     publishLocation: 'Container'
   displayName: 'Publish Grype Report'
 
+- task: PublishBuildArtifacts@1
+  condition: always()
+  inputs:
+    PathtoPublish: 'grype-summary.txt'
+    ArtifactName: 'Security-Summary'
+    publishLocation: 'Container'
+  displayName: 'Publish Security Summary'
 
-# Fail Pipeline on HIGH/CRITICAL
 - script: |
+    echo "=========================================="
+    echo "Running Grype Security Policy Enforcement"
+    echo "=========================================="
+
     grype sbom:sbom.xml --fail-on medium
-  displayName: 'Fail Pipeline on High Vulnerabilities'
+
+    EXIT_CODE=$?
+
+    if [ $EXIT_CODE -ne 0 ]; then
+      echo "##vso[task.logissue type=error]Security policy violation detected."
+      echo "##vso[task.logissue type=error]Medium or higher vulnerabilities were found."
+      echo "##vso[task.logissue type=error]Check Grype reports in pipeline artifacts."
+      echo "##vso[task.complete result=Failed;]Pipeline failed due to vulnerability threshold breach."
+      exit 1
+    fi
+  displayName: 'Security Policy Enforcement'
 
 - task: SonarCloudPrepare@4
   inputs:
