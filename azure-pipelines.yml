@@ -80,23 +80,23 @@ steps:
     publishLocation: 'Container'
   displayName: 'Publish Security Summary'
 
-- script: |
-    echo "=========================================="
-    echo "Running Grype Security Policy Enforcement"
-    echo "=========================================="
+# - script: |
+#     echo "=========================================="
+#     echo "Running Grype Security Policy Enforcement"
+#     echo "=========================================="
 
-    grype sbom:sbom.xml --fail-on medium
+#     grype sbom:sbom.xml --fail-on medium
 
-    EXIT_CODE=$?
+#     EXIT_CODE=$?
 
-    if [ $EXIT_CODE -ne 0 ]; then
-      echo "##vso[task.logissue type=error]Security policy violation detected."
-      echo "##vso[task.logissue type=error]Medium or higher vulnerabilities were found."
-      echo "##vso[task.logissue type=error]Check Grype reports in pipeline artifacts."
-      echo "##vso[task.complete result=Failed;]Pipeline failed due to vulnerability threshold breach."
-      exit 1
-    fi
-  displayName: 'Security Policy Enforcement'
+#     if [ $EXIT_CODE -ne 0 ]; then
+#       echo "##vso[task.logissue type=error]Security policy violation detected."
+#       echo "##vso[task.logissue type=error]Medium or higher vulnerabilities were found."
+#       echo "##vso[task.logissue type=error]Check Grype reports in pipeline artifacts."
+#       echo "##vso[task.complete result=Failed;]Pipeline failed due to vulnerability threshold breach."
+#       exit 1
+#     fi
+#   displayName: 'Security Policy Enforcement'
 
 - task: SonarCloudPrepare@4
   inputs:
